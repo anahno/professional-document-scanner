@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ترکیب عکس‌ها - اسکنر اسناد حرفه‌ای</title>
+    <link rel="stylesheet" href="composer.css">
+    <script src="jspdf.umd.min.js"></script>
+    <script src="processor.js"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-title-group">
+            <h1>ترکیب عکس‌ها روی یک صفحه</h1>
+            <p>چیدمان و ترکیب چندین تصویر روی صفحات استاندارد جهت چاپ یا ساخت PDF</p>
+        </div>
+        <div>
+            <a href="index.html" class="nav-back-link">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                بازگشت به اسکنر
+            </a>
+        </div>
+    </header>
+
+    <main class="composer-container">
+        <!-- Sidebar with controls (Right side in RTL) -->
+        <aside class="composer-sidebar">
+            <!-- Paper Size -->
+            <div class="control-group">
+                <h3>اندازه کاغذ</h3>
+                <div class="page-controls">
+                    <div class="radio-group-inline">
+                        <label class="radio-label">
+                            <input type="radio" name="paper-size" value="a3">
+                            <span>A3</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="paper-size" value="a4" checked>
+                            <span>A4</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="paper-size" value="a5">
+                            <span>A5</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orientation -->
+            <div class="control-group">
+                <h3>جهت صفحه</h3>
+                <div class="page-controls">
+                    <div class="radio-group-inline">
+                        <label class="radio-label">
+                            <input type="radio" name="orientation" value="portrait" checked>
+                            <span>عمودی</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="orientation" value="landscape">
+                            <span>افقی</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display / Snap Options -->
+            <div class="control-group">
+                <h3>راهنما و شبکه</h3>
+                <div class="page-controls">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="toggle-grid">
+                        <span>نمایش شبکه شطرنجی و چسبندگی</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="toggle-guidelines" checked>
+                        <span>خطوط تراز هوشمند (مغناطیسی)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Image Actions -->
+            <div class="control-group">
+                <h3>تصاویر</h3>
+                <input type="file" id="image-file-input" multiple accept="image/*" style="display: none;">
+                <button type="button" class="btn primary-btn" id="add-image-btn" style="margin-bottom: 8px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    افزودن تصویر
+                </button>
+
+                <div class="image-list-container" id="image-list">
+                    <div class="image-list-empty" id="image-list-empty">
+                        تصویری اضافه نشده است
+                    </div>
+            </div>
+
+            <!-- Selected Image Tools & Measurement -->
+            <div class="control-group" id="selected-image-group" style="display: none;">
+                <h3>اندازه و تنظیم تصویر</h3>
+                <div class="dimension-inputs-grid">
+                    <div class="dim-field">
+                        <label for="img-width-input">عرض (cm)</label>
+                        <input type="number" id="img-width-input" step="0.1" min="0.5" max="100">
+                    </div>
+                    <div class="dim-field">
+                        <label for="img-height-input">ارتفاع (cm)</label>
+                        <input type="number" id="img-height-input" step="0.1" min="0.5" max="100">
+                    </div>
+                </div>
+
+                <!-- Position X and Y in cm (allows negative to overhang off paper) -->
+                <div class="dimension-inputs-grid" style="margin-top: 6px;">
+                    <div class="dim-field">
+                        <label for="img-posx-input">موقعیت افقی X (cm)</label>
+                        <input type="number" id="img-posx-input" step="0.1" title="موقعیت افقی؛ با مقادیر منفی عکس از کادر خارج می‌شود">
+                    </div>
+                    <div class="dim-field">
+                        <label for="img-posy-input">موقعیت عمودی Y (cm)</label>
+                        <input type="number" id="img-posy-input" step="0.1" title="موقعیت عمودی؛ با مقادیر منفی عکس از کادر خارج می‌شود">
+                    </div>
+                </div>
+                
+                <label class="checkbox-label" style="margin-top: 6px;">
+                    <input type="checkbox" id="lock-aspect-ratio" checked>
+                    <span>قفل تناسب ابعاد</span>
+                </label>
+
+                <!-- Equalize size buttons -->
+                <div class="action-buttons-row" style="margin-top: 8px;">
+                    <button type="button" class="btn secondary-btn btn-sm" id="match-height-btn" title="ارتفاع این تصویر را با تصویر دیگر برابر می‌کند">
+                        📏 هم‌ارتفاع با تصویر دیگر
+                    </button>
+                    <button type="button" class="btn secondary-btn btn-sm" id="match-width-btn" title="عرض این تصویر را با تصویر دیگر برابر می‌کند">
+                        📐 هم‌عرض با تصویر دیگر
+                    </button>
+                </div>
+
+                <!-- Background Removal inside Composer -->
+                <div style="margin-top: 10px; border-top: 1px dashed var(--panel-border); padding-top: 8px;">
+                    <button type="button" class="btn secondary-btn btn-sm" id="composer-remove-bg-btn" style="width: 100%;">
+                        ✨ حذف پس‌زمینه این تصویر
+                    </button>
+                    <div class="slider-container" id="composer-tolerance-container" style="display: none; margin-top: 6px;">
+                        <div class="slider-header" style="font-size: 11px;">
+                            <label for="composer-bg-tol">حساسیت حذف</label>
+                            <span id="composer-bg-tol-val" class="slider-val">30</span>
+                        </div>
+                        <input type="range" id="composer-bg-tol" min="5" max="80" value="30">
+                    </div>
+                </div>
+
+                <!-- Photoshop-style Crop Tool (برش تصویر) -->
+                <div style="margin-top: 10px; border-top: 1px dashed var(--panel-border); padding-top: 8px;">
+                    <button type="button" class="btn secondary-btn btn-sm" id="toggle-crop-btn" style="width: 100%;">
+                        ✂️ ابزار برش تصویر (Crop)
+                    </button>
+                    <div id="crop-panel" style="display: none; margin-top: 8px; background: #eef3f8; padding: 8px; border-radius: 4px; border: 1px solid #c9d8e5;">
+                        <p style="font-size: 11px; color: #444; margin-bottom: 6px; font-weight: 600;">برش سریع (مثل فتوشاپ):</p>
+                        <div class="action-buttons-row" style="margin-bottom: 8px;">
+                            <button type="button" class="btn secondary-btn btn-sm" id="crop-half-right" title="حذف نیمه چپ و نگه‌داشتن نیمه راست">
+                                نیمه راست
+                            </button>
+                            <button type="button" class="btn secondary-btn btn-sm" id="crop-half-left" title="حذف نیمه راست و نگه‌داشتن نیمه چپ">
+                                نیمه چپ
+                            </button>
+                            <button type="button" class="btn secondary-btn btn-sm" id="crop-half-top" title="نگه‌داشتن نیمه بالا">
+                                نیمه بالا
+                            </button>
+                            <button type="button" class="btn secondary-btn btn-sm" id="crop-half-bottom" title="نگه‌داشتن نیمه پایین">
+                                نیمه پایین
+                            </button>
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header" style="font-size: 11px;">
+                                <label for="crop-left-slider">برش از چپ</label>
+                                <span id="crop-left-val" class="slider-val">0%</span>
+                            </div>
+                            <input type="range" id="crop-left-slider" min="0" max="85" value="0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header" style="font-size: 11px;">
+                                <label for="crop-right-slider">برش از راست</label>
+                                <span id="crop-right-val" class="slider-val">0%</span>
+                            </div>
+                            <input type="range" id="crop-right-slider" min="0" max="85" value="0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header" style="font-size: 11px;">
+                                <label for="crop-top-slider">برش از بالا</label>
+                                <span id="crop-top-val" class="slider-val">0%</span>
+                            </div>
+                            <input type="range" id="crop-top-slider" min="0" max="85" value="0">
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-header" style="font-size: 11px;">
+                                <label for="crop-bottom-slider">برش از پایین</label>
+                                <span id="crop-bottom-val" class="slider-val">0%</span>
+                            </div>
+                            <input type="range" id="crop-bottom-slider" min="0" max="85" value="0">
+                        </div>
+
+                        <div class="action-buttons-row" style="margin-top: 8px;">
+                            <button type="button" class="btn primary-btn btn-sm" id="apply-crop-btn">
+                                ✓ اعمال برش
+                            </button>
+                            <button type="button" class="btn secondary-btn btn-sm" id="reset-crop-btn">
+                                ↺ بازگردانی کامل
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer and Rotation buttons -->
+                <div class="action-buttons-row" style="margin-top: 8px;">
+                    <button type="button" class="btn secondary-btn btn-sm" id="rotate-image-btn" title="چرخش ۹۰ درجه تصویر">
+                        🔄 چرخش ۹۰°
+                    </button>
+                    <button type="button" class="btn secondary-btn btn-sm" id="bring-to-front-btn" title="آوردن به رو">
+                        🔝 روترین
+                    </button>
+                    <button type="button" class="btn secondary-btn btn-sm" id="send-to-back-btn" title="بردن به زیر">
+                        🔚 زیرترین
+                    </button>
+                </div>
+            </div>
+
+            <!-- Layout and Export Actions -->
+            <div class="control-group">
+                <h3>ابزارها و خروجی</h3>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button type="button" class="btn secondary-btn" id="auto-layout-btn" title="چیدمان خودکار در ردیف‌ها">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        چیدمان خودکار تصاویر
+                    </button>
+                    <button type="button" class="btn primary-btn" id="export-pdf-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        دانلود خروجی PDF
+                    </button>
+                    <button type="button" class="btn danger-btn" id="clear-all-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        پاک‌سازی همه
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Viewport Area with Rulers and Canvas -->
+        <section class="composer-viewport">
+            <div class="viewport-toolbar">
+                <div class="viewport-status">
+                    <span id="paper-info-label">A4 عمودی (۲۱۰ × ۲۹۷ میلی‌متر)</span>
+                    <span id="cursor-pos-label">موقعیت: ۰, ۰ سانتی‌متر</span>
+                </div>
+                <div class="zoom-controls">
+                    <button type="button" class="zoom-btn" id="zoom-out-btn" title="کوچک‌نمایی">−</button>
+                    <span class="zoom-level" id="zoom-level-text">100%</span>
+                    <button type="button" class="zoom-btn" id="zoom-in-btn" title="بزرگ‌نمایی">+</button>
+                    <button type="button" class="zoom-btn" id="zoom-fit-btn" title="تطبیق با صفحه" style="font-size: 11px;">⊡</button>
+                </div>
+            </div>
+
+            <div class="composer-canvas-area" id="composer-canvas-area">
+                <!-- Top-Left Corner -->
+                <div class="ruler-corner">mm</div>
+
+                <!-- Horizontal Ruler (Top) -->
+                <div class="ruler-h-wrapper" id="ruler-h-wrapper">
+                    <canvas class="ruler-h" id="ruler-h"></canvas>
+                </div>
+
+                <!-- Vertical Ruler (Left) -->
+                <div class="ruler-v-wrapper" id="ruler-v-wrapper">
+                    <canvas class="ruler-v" id="ruler-v"></canvas>
+                </div>
+
+                <!-- Paper Canvas Workspace -->
+                <div class="paper-canvas-wrapper" id="paper-canvas-wrapper">
+                    <canvas id="paper-canvas"></canvas>
+                    <div id="size-badge" class="size-badge" style="display: none;"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="composer.js"></script>
+</body>
+</html>

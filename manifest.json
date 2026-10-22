@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Document Scanner - اسکنر اسناد هوشمند",
+  "version": "1.1.0",
+  "description": "Offline document scanner: convert photos to clean scans, crop, erase, and export to PDF.",
+  "author": "Behzad Farhadi",
+  "homepage_url": "https://daramet.com/behzadfarhadi",
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_title": "اسکنر اسناد هوشمند"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [],
+  "offline_enabled": true,
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
